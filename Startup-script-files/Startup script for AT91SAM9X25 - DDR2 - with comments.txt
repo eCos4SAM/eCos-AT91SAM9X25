@@ -1,0 +1,331 @@
+#################################################
+#  Connect local gdb server
+target remote localhost:2331
+monitor sleep 100
+
+##### Disable Watchdog
+echo disable watchdog (WDT_MR)\n
+monitor writeu32 0xFFFFFE44 = 0x00008000
+
+#################################################
+# Allow user reset
+#TUPN.DEL set * 0xFFFFFE08 = 0xA5000001
+monitor writeu32 0xFFFFFE08 = 0xA5000100
+#verify
+if (*0xfffffe08 != 0x100)
+   echo "Write error at 0xFFFFFE08 !!!\n"
+end
+monitor sleep 10
+
+#################################################
+#TUPN.ADD.2011.03.29 - Un-remap
+set * 0xFFFFDF00 = 0
+#TUPN.ADD.2011.03.29
+
+# Reset all peripherals
+monitor writeu32 0xFFFFFE00 = 0xA5000006
+monitor sleep 500
+
+# Initialize main oscillator
+# PMC->CKGR_MOR = CKGR_MOR_KEY(0x37) | CKGR_MOR_MOSCSEL | CKGR_MOR_MOSCXTEN;
+monitor writeu32 0xFFFFFC20 = 0x01370001
+#verify
+if (*0xFFFFFC20 != 0x01000001)
+   echo "Write error at 0xFFFFFC20 !!!\n"
+end
+monitor sleep 10
+    
+# Switch to main oscillator
+# PMC->PMC_MCKR = PMC_MCKR_CSS_MAIN_CLK;
+set * 0xFFFFFC30 = 0x00000001
+monitor sleep 10
+    
+# Initialize PLLA @ 800MHz
+# PMC->CKGR_PLLAR = CKGR_PLLAR_STUCKTO1 | CKGR_PLLAR_MULA(199) |
+#   CKGR_PLLAR_OUTA(0)  | CKGR_PLLAR_PLLACOUNT(0x3F) |
+#   CKGR_PLLAR_DIVA(3)# 
+# clock = 12 * (199+1) / 3 = 800
+##TUPN.DEL set * 0xFFFFFC28 = 0x20C73F03
+set * 0xFFFFFC28 = 0x20C73F03
+monitor sleep 10
+
+# Switch to fast clock
+# Switch to main oscillator + prescaler 
+# PMC->PMC_MCKR = PMC_MCKR_CSS_MAIN_CLK | PMC_MCKR_MDIV_PCK_DIV3 | PMC_MCKR_PLLADIV2_DIV2;
+set * 0xFFFFFC30 = 0x00001301
+monitor sleep 10
+
+# Switch to PLL + prescaler
+# PMC->PMC_MCKR = PMC_MCKR_CSS_PLLA_CLK | PMC_MCKR_MDIV_PCK_DIV3 | PMC_MCKR_PLLADIV2_DIV2;
+# main clock = PLLA/2 = 400MHz
+set * 0xFFFFFC30 = 0x00001302
+monitor sleep 10
+
+echo ##### clock normal ####\n
+
+# EBI chip select assignment
+set * 0xFFFFDF20 = 0x0002000A
+monitor sleep 10
+
+# Enable DDR2 clock x2 in PMC
+# PMC->PMC_SCER = PMC_SCER_DDRCK #     
+monitor writeu32 0xFFFFFC00 = 0x04
+#verify
+if (*0xFFFFFC08 != 0x05)
+   echo "Write error at 0xFFFFFC00 !!!\n"
+end
+monitor sleep 10
+
+# Configure the DDR controller    
+    
+# -----------------------Step 1------------------- 
+# Program the memory device type
+# ------------------------------------------------ 
+# REG_DDRSDRC_MD = (DDRSDRC_MD_DBW | DDRSDRC_MD_MD(6))#  
+set * 0xFFFFE820 = 0x16
+monitor sleep 10
+
+# -----------------------Step 2------------------- 
+# 1. Program the features of DDR2-SDRAM device into 
+#    the Configuration Register.
+# 2. Program the features of DDR2-SDRAM device into 
+#    the Timing Register HDDRSDRC2_T0PR.    
+# 3. Program the features of DDR2-SDRAM device into 
+#    the Timing Register HDDRSDRC2_T1PR.
+# 4. Program the features of DDR2-SDRAM device into 
+#    the Timing Register HDDRSDRC2_T2PR.
+# ------------------------------------------------ 
+    
+#  REG_DDRSDRC_CR = (DDRSDRC_CR_NC(1) |     // 10 column bits (1K)
+#                    DDRSDRC_CR_NR(2) |     // 13 row bits    (8K)
+#                    DDRSDRC_CR_CAS(3)|     // CAS Latency 3                                       
+#                    DDRSDRC_CR_DS    |     // Output Driver Impedance Control
+#                    (0x1 << 20)            // DDRSDRC_CR_8Bank
+#                    )# // DLL not reset
+#TUPN.DEL set * 0xFFFFE808 = 0x100135
+set * 0xFFFFE808 = 0x100139
+monitor sleep 10
+
+# assume timings for 7.5ns min clock period
+# REG_DDRSDRC_T0PR = (DDRSDRC_T0PR_TRAS(6)       |     //  6 * 7.5 = 45 ns
+#                     DDRSDRC_T0PR_TRCD(2)       |     //  2 * 7.5 = 15 ns
+#                     DDRSDRC_T0PR_TWR(2)        |     //  2 * 7.5 = 15 ns
+#                     DDRSDRC_T0PR_TRC(8)        |     //  8 * 7.5 = 60 ns
+#                     DDRSDRC_T0PR_TRP(2)        |     //  2 * 7.5 = 15 ns
+#                     DDRSDRC_T0PR_TRRD(1)       |     //  2 * 7.5 = 15 ns
+#                     DDRSDRC_T0PR_TWTR(1)       |     //  2 clock cycle
+#                     DDRSDRC_T0PR_TMRD(2))#           //  2 clock cycles
+set * 0xFFFFE80C = 0x21128226
+monitor sleep 10
+
+# REG_DDRSDRC_T1PR = (DDRSDRC_T1PR_TXP(2)        |     //  2 * 7.5 = 15 ns
+#                     DDRSDRC_T1PR_TXSRD(208)    |     // 200 clock cycles, TXSRD: Exit self refresh delay to Read command
+#                     DDRSDRC_T1PR_TXSNR(20)     |     // 16 * 7.5 = 120 ns TXSNR: Exit self refresh delay to non read command
+#                     DDRSDRC_T1PR_TRFC(18));
+set * 0xFFFFE810 = 0x02D01412
+monitor sleep 10
+    
+# REG_DDRSDRC_T2PR = (DDRSDRC_T2PR_TRTP(2)       | #  2 * 7.5 = 15 ns
+#                     DDRSDRC_T2PR_TRPA(3)       |         
+#                     DDRSDRC_T2PR_TXARDS(7)     |     //  7 clock cycles
+#                     DDRSDRC_T2PR_TXARD(7))#          //  2 clock cycles 
+set * 0xFFFFE814 = 0x2377
+monitor sleep 10
+   
+# -----------------------Step 3------------------- 
+# An NOP command is issued to the DDR2-SDRAM to 
+# enable clock.
+# ------------------------------------------------ 
+set * 0xFFFFE800 = 0x1
+set * 0x20000000 = 0x0
+monitor sleep 10
+
+# A minimum pause of 200uS s is provided to precede any signal toggle.
+monitor sleep 1
+
+# Now clocks which drive DDR2-SDRAM device are enabled
+    
+# -----------------------Step 4------------------- 
+# An NOP command is issued to the DDR2-SDRAM 
+# ------------------------------------------------ 
+set * 0xFFFFE800 = 0x1
+set * 0x20000000 = 0x0
+monitor sleep 10
+
+# Now CKE is driven high.
+
+# -----------------------Step 5------------------- 
+# An all banks precharge command is issued to the 
+# DDR2-SDRAM.
+# ------------------------------------------------ 
+# REG_DDRSDRC_MR = DDRSDRC_MR_MODE(2)#  
+set * 0xFFFFE800 = 0x2
+set * 0x20000000 = 0x0
+monitor sleep 10
+
+# -----------------------Step 6------------------- 
+# An Extended Mode Register set (EMRS2) cycle is 
+# issued to chose between commercialor high 
+# temperature operations
+# ------------------------------------------------ 
+# REG_DDRSDRC_MR = DDRSDRC_MR_MODE(5)#  
+set * 0xFFFFE800 = 0x5
+# The write address must be chosen so that BA[1] is set to 1 and BA[0] are set to 0.
+set * 0x22000000 = 0x0
+monitor sleep 10
+    
+# -----------------------Step 7------------------- 
+# An Extended Mode Register set (EMRS3) cycle is 
+# issued to set all registers to 0.
+# ------------------------------------------------
+# REG_DDRSDRC_MR = DDRSDRC_MR_MODE(5)#  
+set * 0xFFFFE800 = 0x5
+# The write address must be chosen so that BA[1] is set to 1 and BA[0] are set to 1.
+set * 0x23000000 = 0x0
+monitor sleep 10
+    
+# -----------------------Step 8------------------- 
+# An Extended Mode Register set (EMRS1) cycle is 
+# issued to enable DLL.
+# ------------------------------------------------
+# REG_DDRSDRC_MR = DDRSDRC_MR_MODE(5)#  
+set * 0xFFFFE800 = 0x5
+# The write address must be chosen so that BA[1] and BA[0] are set to 0.
+set * 0x21000000 = 0x0
+monitor sleep 10
+
+# -----------------------Step 9------------------- 
+# Program DLL field into the Configuration Register.
+# -------------------------------------------------
+# cr = REG_DDRSDRC_CR;
+# REG_DDRSDRC_CR = (cr | DDRSDRC_CR_DLL | DDRSDRC_CR_DIC);
+set * 0xFFFFE808 |= 0x180
+monitor sleep 10
+    
+# -----------------------Step 10------------------- 
+# A Mode Register set (MRS) cycle is issued to reset
+# DLL.
+# -------------------------------------------------
+# REG_DDRSDRC_MR = DDRSDRC_MR_MODE(3);
+set * 0xFFFFE800 = 0x3
+# The write address must be chosen so that BA[1:0] bits are set to 0.
+set * 0x20000000 = 0x0
+monitor sleep 10
+    
+# -----------------------Step 11------------------- 
+# An all banks precharge command is issued to the 
+# DDR2-SDRAM.
+# -------------------------------------------------
+# REG_DDRSDRC_MR = DDRSDRC_MR_MODE(2);
+set * 0xFFFFE800 = 0x2
+# Perform a write access to any DDR2-SDRAM address to acknowledge this command.
+set * 0x20000000 = 0x0
+monitor sleep 10
+
+# -----------------------Step 12------------------- 
+# Two auto-refresh (CBR) cycles are provided. 
+# Program the auto refresh command (CBR) into the 
+# Mode Register.
+# -------------------------------------------------
+# REG_DDRSDRC_MR = DDRSDRC_MR_MODE(4);
+set * 0xFFFFE800 = 0x4
+# Performs a write access to any DDR2-SDRAM location twice to acknowledge these commands.
+set * 0x20000000 = 0x0
+monitor sleep 10
+
+# Set 2nd CBR
+# REG_DDRSDRC_MR = DDRSDRC_MR_MODE(4);
+set * 0xFFFFE800 = 0x4
+# Performs a write access to any DDR2-SDRAM location twice to acknowledge these commands.
+set * 0x20000000 = 0x0
+monitor sleep 10
+    
+# -----------------------Step 13------------------- 
+# Program DLL field into the Configuration Register
+# to low(Disable DLL reset).
+# -------------------------------------------------
+# cr = REG_DDRSDRC_CR;
+# REG_DDRSDRC_CR = (cr & ((unsigned int)(~DDRSDRC_CR_DLL)))#  
+set * 0xFFFFE808 &= 0xFFFFFF7F
+monitor sleep 10
+    
+# -----------------------Step 14------------------- 
+# A Mode Register set (MRS) cycle is issued to 
+# program the parameters of the DDR2-SDRAM devices
+# -------------------------------------------------
+# REG_DDRSDRC_MR = DDRSDRC_MR_MODE(3);
+set * 0xFFFFE800 = 0x3
+# The write address must be chosen so that BA[1:0] are set to 0.
+set * 0x20000000 = 0x0
+monitor sleep 10
+
+# -----------------------Step 15------------------- 
+# Program OCD field into the Configuration Register
+# to high (OCD calibration default)
+# -------------------------------------------------
+# cr = REG_DDRSDRC_CR;
+# REG_DDRSDRC_CR = (cr | DDRSDRC_CR_OCD(7));
+set * 0xFFFFE808 |= 0x7000
+monitor sleep 10
+    
+# -----------------------Step 16------------------- 
+# An Extended Mode Register set (EMRS1) cycle is 
+# issued to OCD default value.
+# -------------------------------------------------
+# REG_DDRSDRC_MR = DDRSDRC_MR_MODE(5);
+set * 0xFFFFE800 = 0x5
+# The write address must be chosen so that BA[1] is set to 0 and BA[0] is set to 1.
+set * 0x21000000 = 0x0
+monitor sleep 10
+    
+# -----------------------Step 17------------------- 
+# Program OCD field into the Configuration Register 
+# to low (OCD calibration mode exit).
+# -------------------------------------------------
+# cr = REG_DDRSDRC_CR;
+# REG_DDRSDRC_CR = (cr & ((unsigned int)(~DDRSDRC_CR_OCD_Msk)));
+set * 0xFFFFE808 &= 0xFFFF8FFF
+monitor sleep 10
+    
+# -----------------------Step 18------------------- 
+# An Extended Mode Register set (EMRS1) cycle is 
+# issued to enable OCD exit.
+# -------------------------------------------------
+# REG_DDRSDRC_MR = DDRSDRC_MR_MODE(5);
+set * 0xFFFFE800 = 0x5
+# The write address must be chosen so that BA[1] is set to 1 and BA[0] is set to 1.
+set * 0x21000000 = 0x0
+monitor sleep 10
+    
+# -----------------------Step 19,20------------------- 
+# A mode Normal command is provided. Program the 
+# Normal mode into Mode Register.
+# -------------------------------------------------
+# REG_DDRSDRC_MR = DDRSDRC_MR_MODE(0);
+set * 0xFFFFE800 = 0x0
+# Perform a write access to any DDR2-SDRAM address.
+set * 0x20000000 = 0x0
+monitor sleep 10
+    
+# -----------------------Step 21------------------- 
+# Write the refresh rate into the count field in the 
+# Refresh Timer register. The DDR2-SDRAM device requires a
+# refresh every 15.625uS or 7.81uS. With a 100 
+# MHz frequency, the refresh timer count register must to 
+# be set with (15.625 /100 MHz) = 1562 i.e. 0x061A or 
+# (7.81 /100MHz) = 781 i.e. = 0x030d
+# -------------------------------------------------
+# REG_DDRSDRC_RTR = 0x497;
+#TUPN.DEL set * 0xFFFFE804 = 0x00000497
+set * 0xFFFFE804 = 0x00000497
+monitor sleep 10
+
+#################################################
+#TUPN.ADD.2011.03.29 - Remap SRAM to 0x0
+set * 0xFFFFDF00 = 0x03
+#TUPN.ADD.2011.03.29
+
+# monitor sleep for end of calibration
+monitor sleep 10
+
+## ------------------------------------------------

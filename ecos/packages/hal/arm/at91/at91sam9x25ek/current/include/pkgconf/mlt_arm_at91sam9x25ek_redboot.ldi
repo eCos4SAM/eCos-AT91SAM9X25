@@ -1,0 +1,34 @@
+// eCos memory layout - Wed Apr 11 13:49:55 2001
+// =============================================================================
+// Key-change    Date       Author   Description
+// --------------+----------+--------+------------------------------------------
+// SAM9X25-0001  2011/03/20 TuPN     Create new platform (base on g20)
+//
+// =============================================================================
+
+#include <cyg/infra/cyg_type.inc>
+
+MEMORY
+{
+    sram0 : ORIGIN = 0x00305800, LENGTH = 0x2800
+    sdram : ORIGIN = 0x23f00000, LENGTH = 0x00100000
+}
+
+SECTIONS
+{
+    SECTIONS_BEGIN
+    SECTION_rom_vectors (sdram, 0x23f00000, LMA_EQ_VMA)
+	SECTION_fixed_vectors (sdram, 0x23f00040, LMA_EQ_VMA)
+    SECTION_RELOCS (sdram, ALIGN (0x1), LMA_EQ_VMA)
+    SECTION_text (sdram, ALIGN (0x4), LMA_EQ_VMA)
+    SECTION_fini (sdram, ALIGN (0x4), LMA_EQ_VMA)
+    SECTION_rodata (sdram, ALIGN (0x4), LMA_EQ_VMA)
+    SECTION_rodata1 (sdram, ALIGN (0x4), LMA_EQ_VMA)
+    SECTION_got (sdram, ALIGN (0x4), LMA_EQ_VMA)
+    SECTION_fixup (sdram, ALIGN (0x4), LMA_EQ_VMA)
+    SECTION_gcc_except_table (sdram, ALIGN (0x4), LMA_EQ_VMA)
+    SECTION_data (sdram, ALIGN (0x4), FOLLOWING (.gcc_except_table))
+    SECTION_bss (sdram, ALIGN (0x4), LMA_EQ_VMA)
+    CYG_LABEL_DEFN(__heap1) = ALIGN (0x8);
+    SECTIONS_END
+}

@@ -1,0 +1,178 @@
+# ====================================================================
+#
+#      hal_arm_at91sam9x25ek.cdl
+#
+#      ARM AT91SAM9X25-EK development board package configuration data
+#
+# ====================================================================
+## ####ECOSGPLCOPYRIGHTBEGIN####
+## -------------------------------------------
+## This file is part of eCos, the Embedded Configurable Operating System.
+## Copyright (C) 2006 Free Software Foundation, Inc.
+##
+## eCos is free software; you can redistribute it and/or modify it under
+## the terms of the GNU General Public License as published by the Free
+## Software Foundation; either version 2 or (at your option) any later
+## version.
+##
+## eCos is distributed in the hope that it will be useful, but WITHOUT
+## ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+## FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+## for more details.
+##
+## You should have received a copy of the GNU General Public License
+## along with eCos; if not, write to the Free Software Foundation, Inc.,
+## 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
+##
+## As a special exception, if other files instantiate templates or use
+## macros or inline functions from this file, or you compile this file
+## and link it with other works to produce a work based on this file,
+## this file does not by itself cause the resulting work to be covered by
+## the GNU General Public License. However the source code for this file
+## must still be made available in accordance with section (3) of the GNU
+## General Public License v2.
+##
+## This exception does not invalidate any other reasons why a work based
+## on this file might be covered by the GNU General Public License.
+## -------------------------------------------
+## ####ECOSGPLCOPYRIGHTEND####
+# ====================================================================
+######DESCRIPTIONBEGIN####
+#
+# Author(s):      T.B.D
+# Contributors:
+# Date:           2011-03-20
+#
+#####DESCRIPTIONEND####
+#
+# ====================================================================
+# =============================================================================
+# Key-change    Date       Author   Description
+# --------------+----------+--------+------------------------------------------
+# SAM9X25-0001  2011/03/20 TuPN     Create new platform (base on g20)
+#
+#==============================================================================
+#SAM9X25-0001.ADD.Start
+
+cdl_package CYGPKG_HAL_ARM_AT91SAM9X25EK {
+    display       "Atmel AT91SAM9X25-EK board HAL"
+    parent        CYGPKG_HAL_ARM
+    define_header hal_arm_at91sam9x25ek.h
+    include_dir   cyg/hal
+    hardware
+    description   "
+	<T.B.D> The AT91SAM9X25-EK HAL package provides the support needed to run
+	eCos on an Atmel AT91SAM9X25-EK development board."
+
+    compile       at91sam9x25ek_misc.c
+    compile       at91sam9x25ek_mmu.c at91sam9x25ek_spi.c
+    compile       -library=libextras.a at91sam9x25ek_flash.c at91sam9x25ek_redboot.c
+
+    implements    CYGHWR_DEV_ETH_ARM_AT91_USE_RMII
+    implements    CYGPKG_DEVS_FLASH_ATMEL_DATAFLASH_FLASH_DEV
+    implements    CYGINT_HAL_ARM_ARCH_ARM9
+    requires      { CYGHWR_HAL_ARM_AT91 == "AT91SAM9" }
+    requires      { CYGHWR_HAL_ARM_AT91SAM9 == "at91sam9x25" }
+
+    define_proc {
+	puts $::cdl_system_header "#define CYGBLD_HAL_AT91_PIO_LAYOUT_H <cyg/hal/pio_sam9x25.h>"
+	puts $::cdl_system_header "#define CYGBLD_HAL_PLATFORM_H <pkgconf/hal_arm_at91sam9x25ek.h>"
+	puts $::cdl_header "/***** proc output start *****/"
+	puts $::cdl_header "#include <pkgconf/hal_arm_at91sam9.h>"
+	puts $::cdl_header "#define HAL_PLATFORM_CPU    \"ARM926EJ-S\""
+	puts $::cdl_header "#define HAL_PLATFORM_BOARD  \"Atmel AT91SAM9X25-EK\""
+	puts $::cdl_header "#define HAL_PLATFORM_EXTRA  \"\""
+	puts $::cdl_header "/****** proc output end ******/"
+    }
+    cdl_option CYGSEM_HAL_ROM_MONITOR {
+        display       "Behave as a ROM monitor"
+        flavor        bool
+        default_value 0
+        parent        CYGPKG_HAL_ROM_MONITOR
+        requires      { CYG_HAL_STARTUP == "ROM" } 
+        description   "
+            Enable this option if this program is to be used as a ROM monitor,
+            i.e. applications will be loaded into RAM on the board, and this
+            ROM monitor may process exceptions or interrupts generated from the
+            application. This enables features such as utilizing a separate
+            interrupt stack when exceptions are generated."
+    }
+
+    cdl_option CYGSEM_HAL_USE_ROM_MONITOR {
+         display       "Work with a ROM monitor"
+         flavor        booldata
+         legal_values  { "Generic" "GDB_stubs" }
+         default_value { CYG_HAL_STARTUP == "RAM" ? "GDB_stubs" : 0 }
+         parent        CYGPKG_HAL_ROM_MONITOR
+         requires      { CYG_HAL_STARTUP == "RAM" }
+         description   "
+             Support can be enabled for different varieties of ROM monitor.
+             This support changes various eCos semantics such as the encoding
+             of diagnostic output, or the overriding of hardware interrupt
+             vectors.
+             Firstly there is \"Generic\" support which prevents the HAL
+             from overriding the hardware vectors that it does not use, to
+             instead allow an installed ROM monitor to handle them. This is
+             the most basic support which is likely to be common to most
+             implementations of ROM monitor.
+             \"GDB_stubs\" provides support when GDB stubs are included in
+             the ROM monitor or boot ROM."
+    }
+
+    cdl_component CYGPKG_REDBOOT_HAL_OPTIONS {
+        display       "Redboot HAL options"
+        flavor        none
+        no_define
+        parent        CYGPKG_REDBOOT
+        active_if     CYGPKG_REDBOOT
+        description   "
+            This option lists the target's requirements for a valid Redboot
+            configuration."
+
+        cdl_option CYGBLD_BUILD_REDBOOT_BIN {
+            display       "Build Redboot ROM binary image"
+            active_if     CYGBLD_BUILD_REDBOOT
+            default_value 1
+            no_define
+            description "This option enables the conversion of the Redboot ELF
+                         image to a binary image suitable for ROM programming."
+    
+            make -priority 325 {
+                <PREFIX>/bin/redboot.bin : <PREFIX>/bin/redboot.elf
+                $(OBJCOPY) --strip-debug $< $(@:.bin=.img) 
+                $(OBJCOPY) -O srec $< $(@:.bin=.srec)
+                $(OBJCOPY) -O binary $< $@
+            }
+        }
+    }
+    cdl_component CYGHWR_MEMORY_LAYOUT {
+	display "Memory layout"
+	flavor data
+	no_define
+	calculated { (CYG_HAL_STARTUP == "RAM") ? \
+		     "arm_at91sam9x25ek_ram" :
+		     "arm_at91sam9x25ek_rom" }
+
+	cdl_option CYGHWR_MEMORY_LAYOUT_LDI {
+	    display "Memory layout linker script fragment"
+	    flavor data
+	    no_define
+	    define -file system.h CYGHWR_MEMORY_LAYOUT_LDI
+	    calculated { (CYGPKG_REDBOOT) ? \
+		 "<pkgconf/mlt_arm_at91sam9x25ek_redboot.ldi>" :
+		 "<pkgconf/mlt_arm_at91sam9x25ek_app.ldi>" }
+	}
+
+	cdl_option CYGHWR_MEMORY_LAYOUT_H {
+	    display "Memory layout header file"
+	    flavor data
+	    no_define
+	    define -file system.h CYGHWR_MEMORY_LAYOUT_H
+	    calculated { (CYGPKG_REDBOOT) ? \
+		 "<pkgconf/mlt_arm_at91sam9x25ek_redboot.h>" :
+		 "<pkgconf/mlt_arm_at91sam9x25ek_app.h>" }
+	}
+    }
+}
+
+#SAM9X25-0001.ADD.End

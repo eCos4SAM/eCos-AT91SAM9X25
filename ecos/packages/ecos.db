@@ -1,0 +1,513 @@
+target at91sam9x25ek {
+	alias { "Atmel AT91SAM9X25EK evaluation board" at91_at91sam9x25ek }
+	packages { CYGPKG_HAL_ARM
+		   CYGPKG_HAL_ARM_AT91
+		   CYGPKG_HAL_ARM_AT91SAM9
+		   CYGPKG_HAL_ARM_AT91SAM9X25EK
+		   CYGPKG_DEVS_FLASH_ATMEL_DATAFLASH
+		   CYGPKG_IO_SERIAL_ARM_AT91
+		   CYGPKG_IO_SPI
+		   CYGPKG_DEVS_SPI_ARM_AT91
+		   CYGPKG_DEVICES_WATCHDOG_ARM_AT91WDTC
+		   CYGPKG_DEVS_USB_AT91
+		   CYGPKG_DEVS_ETH_PHY
+		   CYGPKG_DEVS_ETH_ARM_AT91
+		   CYGPKG_DEVS_FLASH_NAND
+		   CYGPKG_DEVS_FLASH_AT91SAM9X25EK
+	}
+	description "
+	The at91sam9x25ek target provides the packages needed to run eCos on an
+	Atmel AT91SAM9X25-EK evaluation board."
+}
+package CYGPKG_IO {
+	alias 		{ "I/O sub-system" io }
+	directory	io/common
+	script		io.cdl
+        description "
+           The eCos system is supplied with a number of different
+           device drivers.  This package contains the basic I/O system
+           support which is the basis for all drivers."
+}
+package CYGPKG_IO_SERIAL {
+	alias 		{ "Serial device drivers" serial io_serial }
+	directory	io/serial
+	script		io_serial.cdl
+        description "
+           This package contains drivers for basic I/O services on
+           serial devices."
+}
+package CYGPKG_KERNEL {
+	alias		{ "eCos kernel" kernel }
+	directory	kernel
+	script		kernel.cdl
+     	description "
+This package contains the core functionality of the eCos kernel. It
+relies on functionality provided by various HAL packages and by the
+eCos infrastructure. In turn the eCos kernel provides support for
+other packages such as the device drivers and the uITRON compatibility
+layer."
+}
+package CYGPKG_MEMALLOC {
+        alias           { "Dynamic memory allocation" memalloc malloc }
+        directory       services/memalloc/common
+        script          memalloc.cdl
+        description "
+This package provides memory allocator infrastructure required for
+dynamic memory allocators, including the ISO standard malloc
+interface. It also contains some sample implementations."
+}
+package CYGPKG_LIBC {
+	alias		{ "C library" libc clib clibrary }
+	directory	language/c/libc/common
+	script		libc.cdl
+        description  "
+The packages under this package enable compatibility with the ISO C
+standard - ISO/IEC 9899:1990. This allows the user application to use
+well known standard C library functions, and in eCos starts a thread
+to invoke the user function main(). This package is a top-level placeholder
+to contain the implementations."
+}
+package CYGPKG_LIBC_I18N {
+	alias		{ "ISO C library internationalization" libc_i18n }
+	directory	language/c/libc/i18n
+	script		i18n.cdl
+        description  "
+This package provides internationalization functions specified by the
+ISO C standard - ISO/IEC 9899:1990."
+}
+package CYGPKG_LIBC_SETJMP {
+	alias		{ "ISO C library non-local jumps" libc_setjmp }
+	directory	language/c/libc/setjmp
+	script		setjmp.cdl
+        description  "
+This package provides non-local jump functionality specified by the
+ISO C standard - ISO/IEC 9899:1990."
+}
+package CYGPKG_LIBC_STARTUP {
+	alias		{ "ISO environment startup/termination" libc_startup }
+	directory	language/c/libc/startup
+	script		startup.cdl
+        description   "
+            This package manages the control of the
+            environment (in the general sense) that an
+            application would require for full ISO C / POSIX
+            compatibility, including a main() entry point
+            supplied with arguments and an environment
+            (as retrievable by the getenv() function).
+            It also includes at the other end of things,
+            what happens when main() returns or exit() is
+            called."
+}
+package CYGPKG_LIBC_STDIO {
+	alias		{ "ISO C library standard input/output functions" libc_stdio }
+	directory	language/c/libc/stdio
+	script		stdio.cdl
+        description  "
+This package provides standard input/output functions associated
+with the header file <stdio.h> as specified by the
+ISO C standard - ISO/IEC 9899:1990."
+}
+package CYGPKG_LIBC_STDLIB {
+	alias		{ "ISO C library general utility functions" libc_stdlib }
+	directory	language/c/libc/stdlib
+	script		stdlib.cdl
+        description  "
+This package provides general utility functions associated
+with the header file <stdlib.h> as specified by the
+ISO C standard - ISO/IEC 9899:1990."
+}
+package CYGPKG_LIBC_STRING {
+	alias		{ "ISO C library string functions" libc_string }
+	directory	language/c/libc/string
+	script		string.cdl
+        description  "
+This package provides string functions specified by the ISO C standard
+- ISO/IEC 9899:1990."
+}
+package CYGPKG_LIBC_TIME {
+	alias		{ "ISO C library date/time functions" libc_time }
+	directory	language/c/libc/time
+	script		time.cdl
+        description  "
+This package provides date and time manipulation functionality specified
+by the ISO C standard - ISO/IEC 9899:1990."
+}
+package CYGPKG_LIBM {
+	alias		{ "Math library" libm mathlib mathlibrary }
+	directory	language/c/libm
+	script		libm.cdl
+        description  "
+ISO standard floating point mathematical library containing many
+useful functions for mathematical calculations."
+}
+package CYGPKG_IO_WALLCLOCK {
+        alias           { "Wallclock device framework" wallclock io_wallclock devices_wallclock device_wallclock }
+	directory	io/wallclock
+	script          wallclock.cdl
+        description "
+           This package provides a wallclock device framework. It is
+           also necessary to select an actual driver implementation."
+}
+package CYGPKG_IO_ETH_DRIVERS {
+	alias 		{ "Common ethernet support" net_drivers eth_drivers CYGPKG_NET_ETH_DRIVERS }
+	directory	io/eth
+	script		eth_drivers.cdl
+        description     "Platform independent ethernet support."
+}
+package CYGPKG_IO_FLASH {
+	alias 		{ "Generic FLASH memory support" flash }
+	directory	io/flash
+	script		io_flash.cdl
+        description "
+           This package contains generic support for FLASH memory."
+}
+package CYGPKG_IO_FILEIO {
+	alias 		{ "File IO" fileio io_file }
+	directory	io/fileio
+	script		fileio.cdl
+        description "
+	   This package contains the infrastructure for doing POSIX compliant
+	   file IO."
+}
+package CYGPKG_LINUX_COMPAT {
+        alias           { "Linux compatibility" linux_compat linuxcompat }
+        directory       compat/linux
+        script          linux.cdl
+        description "
+eCos supports a basic Linux compatibility Layer providing various
+functions, equivalents or stubs expected by Linux kernel code, for
+assistance in porting drivers and file system code from Linux.
+Note this does not provide Linux compatibility to applications."
+}
+package CYGPKG_OBJLOADER {
+        alias           { "Object file loader" objloader }
+        directory       services/objloader
+        script          objloader.cdl
+        description "
+This package provides support for the object file loader and relocator."
+}
+package CYGPKG_COMPRESS_ZLIB {
+        alias           { "Zlib compress/decompress" zlib_compress compress_zlib zlib }
+        directory       services/compress/zlib
+        script          compress_zlib.cdl
+        description "
+This package provides zlib compression and decompression support."
+}
+package CYGPKG_IO_DISK {
+    alias           { "Disk device drivers" disk io_disk }
+    directory       io/disk
+    script          io_disk.cdl
+    description "
+        This package contains drivers for basic I/O services on
+        disk devices."
+}
+package CYGPKG_IO_FLASH {
+	alias 		{ "Generic FLASH memory support" flash }
+	directory	io/flash
+	script		io_flash.cdl
+        description "
+           This package contains generic support for FLASH memory."
+}
+package CYGPKG_LIBC_SIGNALS {
+	alias		{ "ISO C library signals" libc_signals }
+	directory	language/c/libc/signals
+	script		signals.cdl
+        description   "
+This component controls signal functionality, as implemented in
+ISO/IEC 9899:1990 chapter 7.7 with the signal() and raise() functions.
+As well as allowing a program to send itself signals, it is also
+possible to cause hardware exceptions to be signalled to the program
+in a similar way."
+}
+package CYGPKG_IO_SPI {
+        alias      { "Generic SPI support" spi io_spi spi_io }
+        directory  io/spi
+        script     spi.cdl
+        hardware
+        description "
+          The generic SPI package provides an API for accessing devices
+          attached to an SPI bus. It also provides support for writing
+          bus drivers and for defining SPI device structures."
+}
+package CYGPKG_NET_LWIP {
+	alias		{"lwIP" lwip}
+	directory	net/lwip_tcpip
+	script		cdl/lwip_net.cdl
+	description	"Lightweight TCP/IP stack: lwIP"
+}
+package CYGPKG_IO_WATCHDOG {
+	alias		{ "Watchdog IO device" watchdog io_watchdog }
+	directory	io/watchdog
+        script          watchdog.cdl
+        description "
+           This package provides a watchdog device."
+}
+package CYGPKG_CYGMON {
+    alias           { "CygMon support via eCos" cygmon }
+    directory       cygmon
+    script          cygmon.cdl
+    description     "
+        This package supports the CygMon \[stand-alone debug monitor\]
+        using eCos as the underlying board support mechanism."
+}
+package CYGPKG_POSIX {
+	alias		{ "POSIX compatibility" posix }
+	directory	compat/posix
+	script		posix.cdl
+	description "
+This package enables compatibility with the ISO/IEEE 1003.1 POSIX
+standard.  This allows the user application to use a well known
+standard API, and starts a thread to invoke the user function
+main()"
+}
+package CYGPKG_UITRON {
+	alias		{ "uITRON compatibility" uitron }
+	directory	compat/uitron
+	script		uitron.cdl
+	description "
+eCos supports a uITRON Compatibility Layer, providing full Level S
+(Standard) compliance with Version 3.02 of the uITRON Standard, plus
+many Level E (Extended) features. uITRON is the premier Japanese
+embedded RTOS standard."
+}
+package CYGPKG_NET {
+	alias 		{ "Networking" net }
+	directory	net/common
+	script		net.cdl
+        description     "Generic networking support, including TCP/IP."
+}
+package CYGPKG_NET_FREEBSD_STACK {
+	alias 		{ "FreeBSD Stack" freebsd_net }
+	directory	net/bsd_tcpip
+	script		freebsd_net.cdl
+        description     "TCP/IP stack from FreeBSD, including KAME IPv6."
+}
+package CYGPKG_NS_DNS {
+	alias 		{ "DNS" dns }
+	directory	net/ns/dns
+	script		dns.cdl
+        description     "DNS client support."
+}
+package CYGPKG_NET_SNTP {
+        alias           { "SNTP support" sntp }
+        directory       net/sntp
+        script          sntp.cdl
+        description "
+This package provides a SNTP client which can recieve broadcast time 
+information and set the system clock."
+}  
+
+package CYGPKG_PPP {
+	alias 		{ "PPP support" ppp }
+	directory	net/ppp
+	script		ppp.cdl
+        description     "PPP support."
+}
+package CYGPKG_HAL_ARM {
+	alias		{ "ARM common HAL" hal_arm arm_hal arm_arch_hal }
+	directory	hal/arm/arch
+	script		hal_arm.cdl
+	hardware
+	description "
+The ARM architecture HAL package provides generic support for this
+processor architecture. It is also necessary to select a specific
+target platform HAL package."
+}
+package CYGPKG_HAL_ARM_AT91 {
+	alias		{ "Atmel AT91 variant HAL" hal_arm_at91 arm_at91_hal }
+	directory	hal/arm/at91/var
+	script		hal_arm_at91.cdl
+	hardware
+        description "
+        The at91 HAL package provides the support needed to run eCos on Atmel
+        AT91 based targets."
+}
+package CYGPKG_HAL_ARM_AT91SAM9 {
+	alias		{ "Atmel AT91SAM9" hal_arm_at91sam9 arm_at91_sam9 }
+	directory	hal/arm/at91/at91sam9
+	script		hal_arm_at91sam9.cdl
+	hardware
+	description "
+		The at91sam9 HAL package provides the support needed to run eCos on
+	an Atmel AT91SAM9 family of CPUs."
+}
+package CYGPKG_HAL_ARM_AT91SAM9X25EK {
+	alias		{ "Atmel AT91SAM9X25EK" hal_arm_at91sam9x25ek arm_at91_sam9x25ek }
+	directory	hal/arm/at91/at91sam9x25ek
+	script		hal_arm_at91sam9x25ek.cdl
+	hardware
+	description "
+		<T.B.D> The at91sam9x25ek HAL package provides the support needed to run eCos on
+	an Atmel AT91SAM9X25-EK development board."
+}
+package CYGPKG_DEVS_FLASH_ATMEL_DATAFLASH {
+    alias       { "Atmel DataFlash support" flash_dataflash dataflash }
+    directory   devs/flash/atmel/dataflash
+    script      devs_flash_atmel_dataflash.cdl
+    hardware
+    description "This package contains hardware support for Atmel DataFlash."
+}
+package CYGPKG_IO_SERIAL_ARM_AT91 {
+    alias 	      { "Atmel AT91 serial device driver"
+                        devs_serial_arm_at91 at91_serial_driver }
+    hardware
+    directory	      devs/serial/arm/at91
+    script	      ser_arm_at91.cdl	
+    description       "Atmel AT91 on-chip serial device driver."
+}
+package CYGPKG_IO_SPI {
+        alias      { "Generic SPI support" spi io_spi spi_io }
+        directory  io/spi
+        script     spi.cdl
+        hardware
+        description "
+          The generic SPI package provides an API for accessing devices
+          attached to an SPI bus. It also provides support for writing
+          bus drivers and for defining SPI device structures."
+}
+package CYGPKG_DEVS_SPI_ARM_AT91 {
+    alias         { "Atmel AT91 SPI device driver" devs_spi_arm_at91 spi_at91_driver }
+    hardware
+    directory     devs/spi/arm/at91
+    script        spi_at91.cdl
+    description   "Atmel AT91 on-chip spi device driver."
+}
+package CYGPKG_DEVICES_WATCHDOG_ARM_AT91WDTC {
+	alias		{ "Watchdog driver for ARM AT91 WDTC" devices_watchdog_at91wdtc device_watchdog_at91wdtc }
+	directory	devs/watchdog/arm/at91wdtc
+	script          watchdog_at91wdtc.cdl
+	hardware
+        description "
+           This package provides a watchdog driver implementation for the
+           ARM AT91 CPUs which have the Watchdog Timer Controller."
+}
+package CYGPKG_DEVS_USB_AT91 {
+        alias           { usb_at91 }
+        hardware
+        directory       devs/usb/at91
+        script          usbs_at91.cdl
+        description     "A device driver for the ATMEL AT91 on-chip USB device"
+}
+package CYGPKG_DEVS_ETH_PHY {
+	alias 		{ "Generic PHY support" eth_phy_support }
+	hardware
+	directory	devs/eth/phy
+	script		phy_eth_drivers.cdl
+        description     "PHY (ethernet physical transciever) API."
+}
+package CYGPKG_DEVS_ETH_ARM_AT91 {
+        alias           { "AT91 Ethernet driver" at91_eth_driver }
+        directory       devs/eth/arm/at91
+        script          at91_eth.cdl
+        hardware
+        description     "Ethernet driver for the AT91 family of chips"
+}
+package CYGPKG_DEVS_FLASH_NAND {
+        alias           { "NAND FLASH memory support" nand_flash } 
+        directory       devs/flash/nand 
+        script          nand_flash.cdl 
+        hardware 
+        description " 
+            This package provides a NAND FLASH memory device support." 
+}
+package CYGPKG_DEVS_FLASH_AT91SAM9X25EK {
+        alias           { "NAND FLASH memory support for AT91SAM9X25EK" nand_flash } 
+        directory       devs/flash/arm/at91sam9x25ek 
+        script          devs_flash_at91sam9x25ek.cdl 
+        hardware 
+        description " 
+            This package provides a NAND FLASH memory device support for AT91SAM9X25EK." 
+}
+package CYGPKG_HAL {
+        alias		{ "eCos common HAL" hal hal_common }
+	directory	hal/common
+	script		hal.cdl
+	description "
+The eCos HAL package provide a porting layer for higher-level parts of
+the system such as the kernel and the C library. Each installation
+should have HAL packages for one or more architectures, and for each
+architecture there may be one or more supported platforms. It is
+necessary to select one target architecture and one platform for that
+architecture. There are also a number of configuration options that
+are common to all HAL packages."
+}
+package CYGPKG_INFRA {
+	alias 		{ Infrastructure infra }
+	directory	infra
+	script		infra.cdl
+        description "
+Common types and useful macros.
+Tracing and assertion facilities.
+Package startup options." 
+}
+package CYGPKG_REDBOOT {
+    alias           { "RedBoot ROM monitor" redboot }
+    directory       redboot
+    script          redboot.cdl
+    description     "
+        This package creates the RedBoot \[stand-alone bootstrap & debug monitor\]
+        using eCos as the underlying board support mechanism."
+}
+package CYGPKG_ISOINFRA {
+        alias           { "ISO C and POSIX infrastructure" isoinfra }
+        directory       isoinfra
+        script          isoinfra.cdl
+        description "
+eCos supports implementations of ISO C libraries and POSIX implementations.
+This package provides infrastructure used by all such implementations."
+}
+package CYGPKG_LIBC_STRING {
+	alias		{ "ISO C library string functions" libc_string }
+	directory	language/c/libc/string
+	script		string.cdl
+        description  "
+This package provides string functions specified by the ISO C standard
+- ISO/IEC 9899:1990."
+}
+package CYGPKG_CRC {
+        alias           { "CRC support" crc }
+        directory       services/crc
+        script          crc.cdl
+        description "
+This package provides support for CRC functions, including the 
+POSIX 1003 defined CRC algorithm."
+}  
+
+package CYGPKG_CPULOAD {
+        alias           { "cpuload support" cpuload }
+        directory       services/cpuload
+        script          cpuload.cdl
+        description "
+This package measures the CPU load over the last 100ms, 1second 
+and 10 second. All loads are returned as a percentage, ie 0-100.
+This is only a rough measure."
+}     
+
+package CYGPKG_PROFILE_GPROF {
+        alias           { "Application profile support" profile_gprof gprof_profile }
+        directory       services/profile/gprof
+        script          profile_gprof.cdl
+        description "
+This package instruments applications to collect profiling data,
+using a methodology compatible with the gprof utility."
+}     
+                  
+package CYGPKG_EZXML {
+        alias           { "ezXML" XML ezxml }
+        directory       services/ezxml
+        script          ezxml.cdl
+        description     "ezXML, Simple XML Parser"
+}
+package CYGPKG_ERROR {
+	alias 		{ "Common error code support" error errors }
+	directory	error
+	script		error.cdl
+        description  "
+This package contains the common list of error and status codes. It is
+held centrally to allow packages to interchange error codes and status
+codes in a common way, rather than each package having its own
+conventions for error/status reporting. The error codes are modelled
+on the POSIX style naming e.g. EINVAL etc. This package also provides
+the standard strerror() function to convert error codes to textual
+representation, as well as an implementation of the errno idiom."
+}
